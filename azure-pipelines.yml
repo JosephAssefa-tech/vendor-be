@@ -1,0 +1,114 @@
+trigger:
+- developer
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+steps:
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '6.x'
+    includePreviewVersions: true
+  displayName: 'Install .NET 6 SDK'
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'restore'
+    projects: '$(solution)'
+  displayName: 'Restore packages'
+  
+- task: SonarQubePrepare@4
+  inputs:
+      SonarQube: 'SonarQube'
+      scannerMode: 'MSBuild'
+      projectKey: 'Vennderful_Vennderful-backend'
+      projectName: 'Vennderful-backend'
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: '$(solution)'
+    arguments: '--configuration $(buildConfiguration) --nowarn:MSB3277;CS8618;CS8604;CS0105;CS0108;CS8600;CS8601;CS0168;CS8603;CS8625;CS1998;CS0649;CS8602;CS8620;S125;S101;S3925;S2971;S1854;S2583;S1104;S2223;S4487;S3776;S2757;S4457;S1481;S3168;S1155;S927;S1075;S112;CS4014;S1135;S2245;S4581;S4136;S3881;S3237;S1144;S4144;S2589;S4792'
+  displayName: 'Build'
+  
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'test'
+    projects: '**/*Tests.csproj'
+    arguments: '--collect "Code Coverage"'
+  displayName: 'Run unit tests'
+- task: SonarQubeAnalyze@4
+- task: SonarQubePublish@4
+  inputs:
+       pollingTimeoutSec: '300'
+- task: sonar-buildbreaker@8
+  inputs:
+      SonarQube: 'Sonarqube'
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'publish'
+    publishWebProjects: true
+    arguments: '-c $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+    zipAfterPublish: true
+  displayName: 'Publish'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    artifactName: 'drop'
+    pathToPublish: '$(Build.ArtifactStagingDirectory)'
+  displayName: 'Publish Artifact'
+- task: Bash@3
+  displayName: 'Post build result to Teams'
+  inputs:
+    targetType: 'inline'
+    script: |
+      webhookUrl='https://excellerentsolutions1.webhook.office.com/webhookb2/70765fa1-d7f0-4524-8460-84bcbd873117@99f9b903-8447-4711-a2df-c5bd1ad1adf7/IncomingWebhook/65d3425983454c439c43c5ea56b81ad3/4a30f9c6-f7bc-4a9b-9591-3ced532092d2'
+      status=$(echo $(Build.BuildNumber) $(Build.Result) $(Agent.JobStatus))
+      message="$(Build.DefinitionName) build $(Build.BuildNumber) has $status."
+      
+      if [ "$status" = "succeeded" ]; then
+        color='00ff00'
+      else
+        color='ff0000'
+      fi
+      
+      json=$(cat <<EOF
+      {
+          "@type": "MessageCard",
+          "@context": "http://schema.org/extensions",
+          "themeColor": "$color",
+          "summary": "$message",
+          "sections": [
+              {
+                  "activityTitle": "$message",
+                  "activitySubtitle": "$(Build.Repository.Name)",
+                  "facts": [
+                      {
+                          "name": "Build Number",
+                          "value": "$(Build.BuildNumber)"
+                      },
+                      {
+                          "name": "Branch",
+                          "value": "$(Build.SourceBranch)"
+                      },
+                      {
+                          "name": "Requested For",
+                          "value": "$(Build.RequestedFor)"
+                      },
+                      {
+                          "name": "Job Status",
+                          "value": "$(Agent.JobStatus)"
+                      }
+                  ]
+              }
+          ]
+      }
+      EOF
+      )
+      
+      curl -H "Content-Type: application/json" -d "$json" $webhookUrl

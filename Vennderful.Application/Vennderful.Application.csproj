@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Features\DocumentsUrl\**" />
+    <Compile Remove="Features\Room\**" />
+    <EmbeddedResource Remove="Features\DocumentsUrl\**" />
+    <EmbeddedResource Remove="Features\Room\**" />
+    <None Remove="Features\DocumentsUrl\**" />
+    <None Remove="Features\Room\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="10.1.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.1" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.5.1" />
+    <PackageReference Include="MediatR" Version="11.1.0" />
+    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
+    <PackageReference Include="Optivem.Framework.Infrastructure.FluentValidation" Version="1.0.23" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Vennderful.Domain\Vennderful.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Features\EventAndClients\Handlers\Queries\" />
+    <Folder Include="Features\EventDocumentSignature\Handlers\Queries\" />
+    <Folder Include="Features\EventDocumentSigners\Validators\" />
+    <Folder Include="Features\Notifications\Validators\" />
+    <Folder Include="Features\Orders\Handlers\" />
+    <Folder Include="Features\Orders\Responses\" />
+    <Folder Include="Features\Orders\Requests\" />
+    <Folder Include="Features\UploadDocuments\Handlers\Queries\" />
+    <Folder Include="Features\UserRoles\DTOs\" />
+    <Folder Include="Features\UserRoles\Responses\" />
+    <Folder Include="Features\UserRoles\Validators\" />
+    <Folder Include="Features\Stripe\Handlers\Queries\" />
+  </ItemGroup>
+
+</Project>
